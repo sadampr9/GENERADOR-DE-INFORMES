@@ -1,0 +1,3 @@
+﻿grupo,consultas,usuarios,dias_activos,intervalo_mediana_s,intervalo_media_s,intervalo_std_s,cv_intervalo,moda_s,pct_en_moda,horas_distintas_activas,pct_madrugada_0_5h,pct_fin_de_semana,entropia_horaria_bits,veredicto
+DNI 08810736,2172,1,13,132.0,612.6015660985721,6507.50551365859,10.62273731212023,480.0,9.85720865960387,13,0.0,2.1639042357274403,3.33067636850078,PROBABLE HUMANO (0/4)
+Resto,27531,12,18,68.0,519.5447145608489,8919.25554518497,17.167445448317327,480.0,4.287946509684218,24,2.680614579928081,17.53659511096582,4.115479211793718,PROBABLE HUMANO (1/4)

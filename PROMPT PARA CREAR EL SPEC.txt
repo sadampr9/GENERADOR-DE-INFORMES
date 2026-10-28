@@ -1,0 +1,74 @@
+Actúa como un ingeniero de software senior especializado en ciencia de datos y automatización de reportes. Tu tarea es crear un archivo `spec.md` (especificación técnica completa) para un proyecto Python de detección de anomalías en consumos de servicios de RENIEC.
+
+### CONTEXTO DEL PROYECTO
+
+Sistema que procesa archivos Excel con datos de consumo detallado de servicios de RENIEC (6 servicios posibles: CONSULTAS EN LINEA VIA LINEA DEDICADA, CONSULTAS EN LINEA VIA INTERNET, VERIFICACION BIOMETRICA DE LA IDENTIDAD DE LAS PERSONAS, WEB SERVICE DE DATOS, WEB SERVICES BIOMETRICO DACTILAR, WEB SERVICE BIOMETRICO FACIAL), detecta comportamientos anómalos o patrones de bots de empresas que pagan por estos servicios, genera gráficos con matplotlib y produce un informe en Word basado en una plantilla existente usando python-docx.
+
+### REQUISITOS FUNCIONALES DETALLADOS
+
+#### 1. Entrada de datos (Excel)
+- **Rango de registros**: 5,000 a 50,000+ filas, una sola hoja
+- **Columnas típicas** (pueden variar según servicio):
+  - N°, RUC_EMPRESA o NU_RUC, EMPRESA o DE_RAZON_SOCIAL, CODIGO_USUARIO o NU_DOC_USUARIO, NOMBRES_USUARIO o DE_USUARIO, FEC_CONSULTA o FE_CONSULTA, DNI_CONSULTADO o NU_DNI_CONSULTADO, RESPUESTA, SERVICIO o NOMBRE_SERVICIO, DE_IP_USUARIO
+  - El usuario puede eliminar las 3-5 primeras columnas para reducir peso
+- **Columnas críticas**: FEC_CONSULTA (fecha/hora) y DNI_CONSULTADO (siempre presentes), RESPUESTA (HIT O NO_HIT, si es de alguna servicio de web services facial o dactilar), DE_IP_USUARIO (Si es que viene incluido en el excel)
+- **Servicio**: Puede estar en columna SERVICIO o NOMBRE_SERVICIO o no aparecer; si no aparece, debe ser ingresado manualmente al ejecutar el script
+  - **Valor por defecto**: "CONSULTAS EN LINEA VIA LINEA DEDICADA"
+  - Implementar como argumento de línea de comandos con valor por defecto
+
+#### 2. Detección de anomalías y patrones de bots
+Detectar los siguientes patrones sospechosos (umbrales basados en "lo humanamente imposible"):
+
+| Tipo de anomalía | Descripción | Umbral sugerido |
+|-----------------|-------------|-----------------|
+| Ráfagas de consultas | Múltiples consultas en segundos/minutos | >10 consultas/minuto desde mismo RUC/usuario |
+| Volumen inusual | Consultas fuera de capacidad humana | >100 consultas/hora |
+| Horarios ilegítimos | Actividad fuera de horario laboral | Consultas entre 00:00-05:00 o domingos |
+| DNI repetido | Mismo DNI consultado muchas veces | >50 veces por RUC en período corto |
+| Patrones periódicos | Intervalos exactos (automatización) | Desviación estándar de intervalos <2 segundos |
+| Triangulación sospechosa | DNI consultado pertenece a dueño de empresa | DNI de directivo/propietario de entidad consultora |
+
+**Investigación de DNIs repetidos**:
+- Cuando un DNI sea consultado >50 veces, buscar automáticamente en fuentes públicas:
+  - APIs de SUNAT/RENIEC (si disponibles públicamente)
+  - Web scraping de registros públicos (Infocorp, registos de empresas)
+  - Buscar si el DNI pertenece a dueño/directivo de empresa de tecnología o consultora
+- Si no se puede automatizar completamente, dejar marca clara en el reporte para investigación manual con el DNI destacado
+
+#### 3. Generación automática de gráficos (matplotlib)
+- **Obligatorio**: Gráfico de consumo diario por fecha al inicio (en "Descripción del incidente")
+- **Detección automática**: El sistema analiza los datos y decide qué gráficos adicionales generar según patrones encontrados:
+  - Consumo por hora (heatmap o línea de tiempo)
+  - Consumo por día de la semana
+  - Distribución por usuario/CODIGO_USUARIO
+  - Cantidad de ráfagas por hora
+  - Scatter plot: volumen vs tiempo
+  - Histograma: frecuencia de consultas por DNI
+  - Tabla resumen de top 10 DNIs más consultados
+- **Guardar gráficos**: PNG de alta resolución en carpeta `output/graficos/`
+- **Requisito técnico**: Usar matplotlib con estilos profesionales (seaborn-style si es posible)
+
+#### 4. Generación del informe en Word (python-docx)
+- **Plantilla**: Usar archivo `plantilla_informe.docx` existente con estructura específica
+- **Secciones del informe**:
+  1. **Información general** (texto fijo, siempre igual)
+  2. **Clasificación del incidente** (texto fijo)
+  3. **Descripción del incidente**:
+     - Texto similar al formato, cambiando palabras clave
+     - **Incluir gráfico de consumo diario por fecha incrustado**
+  4. **Detalle del caso**:
+     - Enlace del caso (placeholder para URL)
+     - Análisis de consumos anómalos (texto generado + gráficos incrustados)
+     - Análisis del consumo por hora (gráfico + interpretación)
+  5. **Resumen de técnicas usadas**:
+     - Insertar todos los gráficos generados con interpretación en texto
+     - Explicar qué patrón detecta cada gráfico
+  6. **Conclusiones** (3 conclusiones específicas del caso)
+  7. **Recomendación** (texto casi fijo, solo cambiar nombres de empresa/RUC)
+
+- **Incrustación de gráficos**: Usar `python-docx` para agregar imágenes PNG a secciones específicas
+- **Lectores objetivo**: Jefe (auditoría interna) y empresa infractora (notificación formal)
+
+### REQUISITOS NO FUNCIONALES
+
+#### Estructura de módulos (dividido en módulos)
